@@ -322,12 +322,29 @@ def assemble_file(path: Path) -> Program:
     return assemble(path.read_text(encoding="utf-8"), source=str(path))
 
 
+def stimulus_texts(program: Program) -> tuple[str, str]:
+    """``.in`` (IN.PORT values, hex) and ``.intr`` (INTR cycles, decimal) for the testbench."""
+    d = program.directives
+    return (
+        "".join(f"{v:08X}\n" for v in d.inputs),
+        "".join(f"{c}\n" for c in sorted(d.intr_cycles)),
+    )
+
+
 def write_outputs(program: Program, stem: Path) -> list[Path]:
-    """Write ``stem.mem``, ``stem.mif`` and ``stem.lst``; returns the paths."""
+    """Write ``stem.mem/.mif/.lst`` and ``stem.in/.intr`` (testbench stimuli)."""
     stem.parent.mkdir(parents=True, exist_ok=True)
-    paths = [stem.with_suffix(s) for s in (".mem", ".mif", ".lst")]
-    for p, text in zip(
-        paths, (mem_text(program), mif_text(program), listing_text(program)), strict=True
-    ):
+    ins, intr = stimulus_texts(program)
+    texts = {
+        ".mem": mem_text(program),
+        ".mif": mif_text(program),
+        ".lst": listing_text(program),
+        ".in": ins,
+        ".intr": intr,
+    }
+    paths = []
+    for suffix, text in texts.items():
+        p = stem.parent / (stem.name + suffix)
         p.write_text(text, encoding="utf-8")
+        paths.append(p)
     return paths

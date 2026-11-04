@@ -35,7 +35,7 @@ table: .WORD -1             # explicit data word (two's complement)
    ```bash
    uv run archp asm programs/one_operand.asm
    ```
-2. This writes `programs/one_operand.mem` (simulation), `.mif` (Quartus) and `.lst` (listing: address, word, disassembly, source line).
+2. This writes `programs/one_operand.mem` (simulation), `.mif` (Quartus), `.lst` (listing: address, word, disassembly, source line), and `.in`/`.intr` (testbench stimuli from the `#!` lines; used by the ModelSim `run.do`, [SG-004](SG-004-modelsim-demo.md)).
 
 ## Simulating a program (GHDL)
 - `uv run archp golden prog.asm`: golden model only (instant).

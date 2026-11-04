@@ -1,6 +1,6 @@
 # Session S002 — 2026-11-04 — Full-build run (T-002 onward)
 
-- **Tasks touched:** T-002…T-008 (more appended as completed)
+- **Tasks touched:** T-002…T-009 (more appended as completed)
 - **Branches / PRs:** one `<type>/T-NNN-slug` branch and one squash-merged PR per task
 
 ## Mode
@@ -22,12 +22,14 @@ After the S001 interview the user said "Execute": Claude builds T-002…T-013 in
   - Results: 124-cycle interrupt sweep plus 30 random programs with interrupts match golden; 7/7 interrupt mutations caught.
   - Measured: INT+RTI = 9 cycles; edges < 3 cycles apart merge (documented in ADR-007).
   - 390 tests. PR #8.
+- **T-009:** ModelSim `compile.do`/`run.do`/`wave.do`, `.in`/`.intr` stimulus files, SG-004. Do-file consistency tested (order mutation caught). PR #9.
 
 ## Decisions (with ADR links)
 - ADR-007 consequence added: back-to-back INTR edges closer than the acknowledge latency merge (measured, T-008).
 - SUB/CMP carry: the user ruled "brief silent → follow last term's implementation" = borrow. Evidence and a one-constant switch were added to [ADR-006](../decisions/ADR-006-flag-semantics.md).
 
 ## Open items / blockers
+- Team: run SG-004 in ModelSim once (TC-213 GUI part).
 - None.
 
 ## Next steps (in order)
