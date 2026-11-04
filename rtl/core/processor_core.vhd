@@ -73,6 +73,8 @@ architecture rtl of processor_core is
   signal wb_we, pcl_valid, wb_rti       : std_logic;
   signal out_r                          : word_t;
   signal regs                           : reg_array_t;
+  -- interrupt request latch (ADR-007)
+  signal intr_d, int_pending, int_ack   : std_logic;
 begin
   -- ===================================================================== IF
   u_fetch : entity work.fetch_unit
@@ -99,7 +101,7 @@ begin
   u_decode : entity work.decode_stage
     port map (clk => clk, rst => rst, instr => mem_dout, fetch_valid => fetch_valid,
               id_pc => id_pc, id_npc => id_npc, flush => flush, mem_busy => mem_busy,
-              pcl_valid => pcl_valid,
+              pcl_valid => pcl_valid, int_pending => int_pending,
               ex1_ctrl => ide_q.ctrl, ex2_ctrl => e12_q.ctrl,
               ra_addr => ra_addr, rb_addr => rb_addr, ra_data => ra_data, rb_data => rb_data,
               id_ex1_d => ide_d, replay => replay, redirect => id_redirect, target => id_target,
@@ -162,6 +164,28 @@ begin
     end if;
   end process;
   out_port <= out_r;
+
+  -- ===================================================================== interrupt
+  -- INTR.IN rising edge -> pending; cleared when the interrupt's push micro-op
+  -- reaches EX2 (EX2 is never flushed, so the request cannot be lost)
+  int_ack <= e12_q.ctrl.valid and e12_q.ctrl.hwint;
+
+  process (clk)
+  begin
+    if rising_edge(clk) then
+      if rst = '1' then
+        intr_d      <= '0';
+        int_pending <= '0';
+      else
+        intr_d <= intr;
+        if intr = '1' and intr_d = '0' then
+          int_pending <= '1';
+        elsif int_ack = '1' then
+          int_pending <= '0';
+        end if;
+      end if;
+    end if;
+  end process;
 
   -- ===================================================================== debug
   dbg_regs     <= regs;

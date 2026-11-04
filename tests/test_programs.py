@@ -11,10 +11,6 @@ from archp.assembler import assemble, assemble_file
 from archp.golden import check_expect
 
 PROGRAMS = sorted((REPO_ROOT / "programs").glob("*.asm"))
-# Features delivered by later tasks: strict xfail until then (must start passing).
-PENDING = {
-    "int_sw": "INT/RTI (T-008)",
-}
 
 
 def _check(prog_src: Path | str, build: Path, dynamic: bool = False) -> None:
@@ -25,16 +21,7 @@ def _check(prog_src: Path | str, build: Path, dynamic: bool = False) -> None:
     assert diffs == [], "\n".join(diffs)
 
 
-@pytest.mark.parametrize(
-    "path",
-    [
-        pytest.param(p, marks=pytest.mark.xfail(strict=True, reason=PENDING[p.stem]))
-        if p.stem in PENDING
-        else p
-        for p in PROGRAMS
-    ],
-    ids=lambda p: p.stem,
-)
+@pytest.mark.parametrize("path", PROGRAMS, ids=lambda p: p.stem)
 def test_program_static(path: Path, rtl_build: Path) -> None:
     _check(path, rtl_build)
 

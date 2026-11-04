@@ -58,3 +58,14 @@ def cycles(body: str, build: Path) -> int:
 )
 def test_penalty(hazard: str, reference: str, penalty: int, rtl_build: Path) -> None:
     assert cycles(hazard, rtl_build) - cycles(reference, rtl_build) == penalty
+
+
+def test_int_entry_plus_rti_penalty(rtl_build: Path) -> None:
+    # INT: push + vector read micro-ops, wait for the vector (5); RTI: wait for pop (4)
+    head = ".ORG 0\n10\n.ORG 2\n300\n.ORG 10\nLDM R3, 1\n"
+    tail = TAIL.replace(".ORG 300\nF: RET", ".ORG 300\nRTI")
+
+    def c(body: str) -> int:
+        return sim.run_rtl(assemble(head + body + tail), rtl_build).cycles
+
+    assert c("INT 0") - c("NOP\nNOP") == 9

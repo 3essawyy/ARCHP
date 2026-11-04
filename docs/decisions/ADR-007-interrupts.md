@@ -33,5 +33,6 @@ On INTR.IN the processor must finish the instructions already in the pipeline, p
 | Level-sensitive INTR | Must be dropped before RTI or it fires again |
 
 ## Consequences
+- **Request merging (measured in T-008):** `int_pending` is one bit. A second INTR edge that arrives before the pending request is acknowledged (when its push micro-op reaches EX2) is merged into it. With the test program, edges 2 cycles apart merge and edges ≥ 3 cycles apart are both served (nested). The brief defines a single interrupt line and nothing about request queuing; `tests/test_interrupts.py::test_edges_before_acknowledge_merge` documents the behaviour.
 - 5-cycle interrupt entry penalty.
 - The testbench logs the number of retired instructions at each interrupt so the golden model can replay the interrupt at the same architectural point (ADR-013).

@@ -1,7 +1,7 @@
 # Module: decode
 
 - **Owner:** TBD
-- **Status:** Implemented (T-006: HDU, replay, SWAP, HLT; control flow T-007; interrupts T-008)
+- **Status:** Implemented (T-006, T-007, T-008)
 - **Code:** `rtl/decode/control_unit.vhd`, `rtl/decode/decode_stage.vhd`
 - **Tasks:** T-006, T-007, T-008
 - **ADRs:** ADR-003, ADR-007, ADR-008, ADR-010, ADR-011
@@ -28,6 +28,8 @@ Decode stage: control unit (opcode → control word), micro-op sequencer (SWAP, 
 - **JMP/CALL:** `redirect = valid_in and (JMP or CALL)`, `target = instr(11:0)`. CALL also issues its push micro-op.
 - **RET/RTI:** `start_wait` sets `wait_r` (fetch blocked, decode input ignored); `pcl_valid` clears it.
 - **Flush:** clears `phase`, `wait_r` and `halted_r` (undoes a wrong-path SWAP/RET/HLT).
+
+- **Interrupts and INT:** see [interrupts](../interrupts/README.md). Priority inside the issue process: `hw_phase` → `inject` → load-use stall → SWAP phase 0 → INT phase 0 → normal (incl. SWAP/INT phase 1, RET/RTI wait, JMP/CALL redirect, HLT).
 
 ## Validation and failure modes
 | Failure | Detection | Behavior |
