@@ -26,6 +26,16 @@ Status tracked in [README.md](README.md). Unless noted, each TC is automated by 
   - load → store data, flags → jump, back-to-back PUSH/POP.
   - All correct with no NOPs inserted by the programmer.
 
+### TC-204a — Random hazard-dense programs
+- **Proves:** REQ-E5 (data + structural hazards)
+- **Type:** Automated (`tests/test_programs.py::test_fuzz_*`, generator `archp.fuzz`)
+- **Expected:** 40 seeds x 70 random instructions (ALU, SWAP, LDD/STD, PUSH/POP, IN/OUT): RTL == golden.
+
+### TC-204b — Hazard penalties
+- **Proves:** HLD §6 timing claims
+- **Type:** Automated (`tests/test_timing.py`)
+- **Expected:** load-use 2/1/0, POP-use 2, ALU RAW 0, store 1, PUSH+POP 2, SWAP 1 cycles.
+
 ### TC-205 — Structural hazards
 - **Proves:** REQ-E5 (structural hazards)
 - **Programs:** `programs/hazards_structural.asm`

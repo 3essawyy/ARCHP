@@ -37,6 +37,11 @@ table: .WORD -1             # explicit data word (two's complement)
    ```
 2. This writes `programs/one_operand.mem` (simulation), `.mif` (Quartus) and `.lst` (listing: address, word, disassembly, source line).
 
+## Simulating a program (GHDL)
+- `uv run archp golden prog.asm`: golden model only (instant).
+- `uv run archp sim prog.asm [--wave prog.ghw]`: RTL only; prints registers, cycles, OUT log. Open `.ghw` with GTKWave.
+- `uv run archp check prog.asm`: RTL and golden, compared word for word, plus `#! expect` (prints `PASS`/`FAIL` and each difference).
+
 ## Verify it worked
 The command prints `wrote …` three times and the word/instruction counts. Errors print `file:line: message` and exit with code 1.
 

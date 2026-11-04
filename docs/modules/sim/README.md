@@ -1,7 +1,7 @@
 # Module: sim
 
 - **Owner:** TBD
-- **Status:** In progress (T-002: GHDL runner, CI)
+- **Status:** In progress (T-002 runner; T-006 system TB, sim/compare, fuzz)
 - **Code:** `tb/`, `src/archp/ghdl.py`, `src/archp/compare.py`, `src/archp/cli.py`, `sim/modelsim/`, `quartus/`, `.github/workflows/`
 - **Tasks:** T-002, T-006, T-009, T-011
 - **ADRs:** ADR-002, ADR-013
@@ -12,8 +12,9 @@ Verification and tool flow: testbenches, GHDL runner, RTL-vs-golden comparison, 
 ## Interfaces
 | Direction | Interface | Contract |
 |---|---|---|
-| Provides | | (filled when implemented) |
-| Consumes | | |
+| Provides | `tb_processor` generics `G_PROGRAM, G_INPUTS, G_INTR, G_DUMP, G_MAX_CYCLES, G_DYNAMIC_BP` | Dump: STATUS, CYCLES, RETIRED, PC, SP, FLAGS, R0–R7, OUT*, INT*, M (non-zero) |
+| Provides | `archp.sim.build/run_rtl/golden_for/compare`, `archp.fuzz.generate` | |
+| Provides | CLI `archp sim|check prog.asm [--dynamic] [--wave f.ghw]` | |
 
 ## Data
 (filled when implemented)
@@ -21,6 +22,11 @@ Verification and tool flow: testbenches, GHDL runner, RTL-vs-golden comparison, 
 ## Internal design
 - `archp.ghdl`: `analyse(files, workdir)`, `run(top, workdir, generics)` (VHDL-93, `--assert-level=error`), `rtl_files()` (dependency order: pkg, memory, decode, execute, pipeline, fetch, core, top).
 - CI: `.github/workflows/ci.yml` installs GHDL from apt, `uv sync --locked`, then lint, types, tests.
+
+- **Shadow memory:** the testbench keeps its own copy (program + every write seen on the memory port), so the final memory can be dumped without hierarchical references (VHDL-93).
+- **IN.PORT:** advances on `dbg_in_rd`.
+- **Interrupt log:** the retired count at each `dbg_hwint`.
+- **Build reuse:** the RTL + TB are built once per pytest worker (`rtl_build` fixture) and each program runs with `--elab-run` and its own generics.
 
 ## Validation and failure modes
 | Failure | Detection | Behavior |
@@ -31,6 +37,7 @@ Verification and tool flow: testbenches, GHDL runner, RTL-vs-golden comparison, 
 |---|---|---|
 
 ## Tests
+`tests/test_programs.py`, `tests/test_timing.py`.
 - `tests/test_toolchain.py` (T-002): GHDL smoke pass + forced failure.
 - `tests/test_docs_links.py`: relative Markdown links.
 
