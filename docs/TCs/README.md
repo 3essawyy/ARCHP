@@ -45,5 +45,5 @@ Update **Status** with date + commit whenever a TC is run. Automated TCs run in 
 | TC-210 | Dynamic-predictor build passes every program | Automated | Not run |
 | TC-211 | `ghdl --synth` of the top: synthesizable, no latches | Automated | Not run |
 | TC-212 | Quartus 16.1 full compile: programming file, block memory bits = 131072, Flow Summary | Manual (team) | Not run |
-| TC-213 | ModelSim waveform with the required signals only | Manual (team) | Not run |
+| TC-213 | ModelSim waveform with the required signals only | Manual (team) | Automated part **Pass** 2026-11-04 (T-009); GUI run: team |
 | TC-214 | Phase 2 report content | Manual | Not run |

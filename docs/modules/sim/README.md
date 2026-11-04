@@ -28,6 +28,8 @@ Verification and tool flow: testbenches, GHDL runner, RTL-vs-golden comparison, 
 - **Interrupt log:** the retired count at each `dbg_hwint`.
 - **Build reuse:** the RTL + TB are built once per pytest worker (`rtl_build` fixture) and each program runs with `--elab-run` and its own generics.
 
+- **ModelSim:** `sim/modelsim/compile.do` (explicit order), `run.do <stem> [dynamic]`, `wave.do` (CLK, Reset, Interrupt, IN.port, OUT.port, PC, SP, Flags, R0–R7). [SG-004](../../SystemGuides/SG-004-modelsim-demo.md).
+
 ## Validation and failure modes
 | Failure | Detection | Behavior |
 |---|---|---|
@@ -37,6 +39,7 @@ Verification and tool flow: testbenches, GHDL runner, RTL-vs-golden comparison, 
 |---|---|---|
 
 ## Tests
+`tests/test_modelsim.py` (do-file consistency, TC-213 automated part).
 `tests/test_programs.py`, `tests/test_timing.py`.
 - `tests/test_toolchain.py` (T-002): GHDL smoke pass + forced failure.
 - `tests/test_docs_links.py`: relative Markdown links.

@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from archp import REPO_ROOT, ghdl
-from archp.assembler import Program, mem_text
+from archp.assembler import Program, mem_text, stimulus_texts
 from archp.golden import Golden, State
 
 TB_TOP = "tb_processor"
@@ -87,9 +87,11 @@ def run_rtl(
     with tempfile.TemporaryDirectory(prefix="archp-run-") as tmp:
         t = Path(tmp)
         (t / "prog.mem").write_text(mem_text(program))
-        (t / "in.txt").write_text("".join(f"{v:08X}\n" for v in d.inputs))
-        intr = sorted(intr_cycles if intr_cycles is not None else d.intr_cycles)
-        (t / "intr.txt").write_text("".join(f"{c}\n" for c in intr))
+        ins, intr_text = stimulus_texts(program)
+        if intr_cycles is not None:
+            intr_text = "".join(f"{c}\n" for c in sorted(intr_cycles))
+        (t / "in.txt").write_text(ins)
+        (t / "intr.txt").write_text(intr_text)
         generics: dict[str, str | int | bool] = {
             "G_PROGRAM": str(t / "prog.mem"),
             "G_INPUTS": str(t / "in.txt"),

@@ -24,7 +24,7 @@ The brief's advice "integrate incrementally" shapes the order: leaf blocks (T-00
 | [T-006](T-006-pipeline-core.md) | Pipeline core: stages, pipeline registers, forwarding, load-use, structural hazards, SWAP + RTL test harness | fetch, decode, pipeline, ex1, ex2, mem-wb, hazards, sim | T-004, T-005 | W+2 | Done |
 | [T-007](T-007-control-flow.md) | Control flow: static prediction, flush, JMP/CALL/RET | fetch, decode, ex2 | T-006 | W+3 | Done |
 | [T-008](T-008-interrupts-reset-hlt.md) | Interrupts, INT/RTI, reset boot, HLT | interrupts, decode, fetch | T-007 | W+3 | Done |
-| [T-009](T-009-modelsim-demo.md) | ModelSim do-files, waveform and demo guide | sim | T-008 | W+4 | Todo |
+| [T-009](T-009-modelsim-demo.md) | ModelSim do-files, waveform and demo guide | sim | T-008 | W+4 | Done |
 | [T-010](T-010-dynamic-bp.md) | Bonus: 2-bit dynamic branch predictor with BTB in fetch | predictor, fetch, ex2 | T-008 | W+4 | Todo |
 | [T-011](T-011-quartus-area.md) | Quartus project, synthesis checks and area tuning | sim, all RTL | T-008 | W+5 | Todo |
 | [T-013](T-013-phase2-pack.md) | Phase 2 submission pack and final verification | docs | all | before W13 | Todo |
