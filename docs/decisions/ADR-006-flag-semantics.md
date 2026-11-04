@@ -29,5 +29,11 @@ The brief lists which instructions update Z/N/C, but leaves the carry meaning fo
 | SHR updates C | Not in the brief; the TA's tests follow the brief |
 | Flags written in WB | Would need flag forwarding to EX2 |
 
+## Evidence and risk (added 2026-11-04, T-003)
+- **Last term's TA comment disagrees.** `TwoOperand.txt` comments `SUB R6,R5,R4` (FFFFFFFF − FFFFF325) as "C-->1 … carry as not borrow".
+- **Last term's implementation agrees with us.** The reference ALU (`six-stage-pipeline-processor/src/components/alu.vhd`) sets C = unsigned borrow for SUB.
+- **User rule:** if the brief is silent, follow last term's implementation. So **C = borrow stands**.
+- **Mitigation:** the convention is one constant: `SUB_CARRY_IS_BORROW` in `archp.golden` and `C_SUB_CARRY_IS_BORROW` in `archp_pkg`. If the TA asks for the other convention, flipping both constants switches it.
+
 ## Consequences
 The golden model implements exactly these rules; test programs assert them.
