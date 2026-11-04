@@ -1,18 +1,38 @@
-"""`archp` command line. Sub-commands are added by later tasks (asm, golden, sim, check)."""
+"""`archp` command line: asm (T-003); golden, sim and check are added by later tasks."""
 
 from __future__ import annotations
 
 import argparse
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 
 from archp import __version__
+from archp.assembler import AsmError, assemble_file, write_outputs
+
+
+def _cmd_asm(args: argparse.Namespace) -> int:
+    src = Path(args.source)
+    try:
+        prog = assemble_file(src)
+    except AsmError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+    stem = Path(args.output) if args.output else src.with_suffix("")
+    for p in write_outputs(prog, stem):
+        print(f"wrote {p}")
+    print(f"{len(prog.words)} words ({len(prog.code)} instructions)")
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="archp", description="ARCHP processor tools")
     p.add_argument("--version", action="version", version=f"archp {__version__}")
-    p.add_subparsers(dest="cmd")
+    sub = p.add_subparsers(dest="cmd")
+    a = sub.add_parser("asm", help="assemble a program into .mem/.mif/.lst")
+    a.add_argument("source", help="assembly file (.asm / .txt)")
+    a.add_argument("-o", "--output", help="output path stem (default: next to the source)")
+    a.set_defaults(func=_cmd_asm)
     return p
 
 
@@ -22,7 +42,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.cmd is None:
         parser.print_help()
         return 0
-    return 0
+    rc: int = args.func(args)
+    return rc
 
 
 if __name__ == "__main__":

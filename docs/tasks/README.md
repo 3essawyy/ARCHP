@@ -12,7 +12,7 @@ The brief's advice "integrate incrementally" shapes the order: leaf blocks (T-00
 |---|---|---|---|---|---|
 | [T-001](T-001-docs-scaffold.md) | Docs scaffold, requirements, HLD, ADRs, task breakdown | docs | — | W+0 | Done |
 | [T-002](T-002-repo-skeleton-ci.md) | Repo skeleton, tooling and CI (uv, ruff, mypy, pytest, GHDL) | sim | T-001 | W+0 | Done |
-| [T-003](T-003-isa-assembler.md) | ISA definition and assembler | assembler | T-002 | W+1 | Todo |
+| [T-003](T-003-isa-assembler.md) | ISA definition and assembler | assembler | T-002 | W+1 | Done |
 | [T-012](T-012-phase1-pack.md) | Phase 1 submission pack: schematic and design report | docs | T-008 | before W11 | Todo |
 
 ## Phase 2 and bonus

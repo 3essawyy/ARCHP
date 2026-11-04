@@ -6,3 +6,4 @@ One plan per non-trivial task, numbered like its task (`PLAN-006` ↔ `T-006`). 
 |---|---|---|
 | [PLAN-001](PLAN-001-docs-scaffold.md) | T-001 Docs scaffold | Executed |
 | [PLAN-002](PLAN-002-repo-skeleton-ci.md) | T-002 Repo skeleton, tooling, CI | Executed |
+| [PLAN-003](PLAN-003-isa-assembler.md) | T-003 ISA + assembler | Executed |
