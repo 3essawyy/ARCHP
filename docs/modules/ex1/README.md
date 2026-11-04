@@ -1,7 +1,7 @@
 # Module: ex1
 
 - **Owner:** TBD
-- **Status:** Planned
+- **Status:** In progress (ALU + CCR done in T-005; stage in T-006)
 - **Code:** `rtl/execute/alu.vhd`, `rtl/execute/ccr.vhd`, `rtl/execute/ex1_stage.vhd`
 - **Tasks:** T-005, T-006
 - **ADRs:** ADR-005, ADR-006, ADR-014
@@ -12,14 +12,17 @@ Execute-1: ALU (add/sub/and/not/inc/pass/shift/in/setc, flags), operand-B immedi
 ## Interfaces
 | Direction | Interface | Contract |
 |---|---|---|
-| Provides | | (filled when implemented) |
-| Consumes | | |
+| Provides | `alu(op, a, b, shamt, in_port) -> result, z, n, c, zn_we, c_we` | Combinational; flags per ADR-006 |
+| Provides | `ccr(... ex1_*, ex2_clr, wb_rti, wb_flags) -> flags` | C N Z; priority RTI, then EX2 clear, then EX1 update |
 
 ## Data
 (filled when implemented)
 
 ## Internal design
-See [HLD](../../architecture/HLD.md) until implemented.
+- **ALU ops:** ADD, SUB, AND, NOT, INC, PASSA, PASSB, SHL, SHR, IN, SETC (4-bit `alu_op_t`).
+- **One adder:** `sum = ('0'&a&'1') + ('0'&bx&cin)`, with `bx` = B, ~B or 0 and `cin` = 0 or 1.
+- **SHL carry:** bit 32 of `('0'&a) << shamt`.
+- **SUB carry:** `not cout` while `C_SUB_CARRY_IS_BORROW` is set.
 
 ## Validation and failure modes
 | Failure | Detection | Behavior |
@@ -30,5 +33,6 @@ See [HLD](../../architecture/HLD.md) until implemented.
 |---|---|---|
 
 ## Tests
+`test_alu_matches_golden` (≈4,500 vectors vs `archp.golden.alu`), `test_ccr` (TC-106).
 
 ## Known limitations
