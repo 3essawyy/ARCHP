@@ -19,7 +19,7 @@ The brief's advice "integrate incrementally" shapes the order: leaf blocks (T-00
 
 | ID | Title | Modules | Depends on | Target | Status |
 |---|---|---|---|---|---|
-| [T-004](T-004-golden-model.md) | Golden ISA model and base test programs | golden-model | T-003 | W+1 | Todo |
+| [T-004](T-004-golden-model.md) | Golden ISA model and base test programs | golden-model | T-003 | W+1 | Done |
 | [T-005](T-005-rtl-blocks.md) | RTL building blocks: package, memory, register file, ALU, CCR | memory, register-file, ex1 | T-002 | W+2 | Todo |
 | [T-006](T-006-pipeline-core.md) | Pipeline core: stages, pipeline registers, forwarding, load-use, structural hazards, SWAP + RTL test harness | fetch, decode, pipeline, ex1, ex2, mem-wb, hazards, sim | T-004, T-005 | W+2 | Todo |
 | [T-007](T-007-control-flow.md) | Control flow: static prediction, flush, JMP/CALL/RET | fetch, decode, ex2 | T-006 | W+3 | Todo |
