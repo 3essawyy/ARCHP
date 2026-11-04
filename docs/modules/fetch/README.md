@@ -31,6 +31,8 @@ Fetch stage: PC register, next-address priority mux (WB pc-load, EX2 redirect, d
 - **Static build:** `id_npc = pc` (exact whenever `fv = 1`), which saves a 12-bit register.
 - **Boot:** reset sets `pc = 0`, `boot = 1`. The boot cycle reads M[0]; the next cycle (`bootq`) loads it as `target`.
 
+- **Dynamic build (`G_DYNAMIC_BP`):** `next_pc = BTB target when predicted taken else target+1`; `id_npc` and `id_pred` become registers (see [predictor](../predictor/README.md)).
+
 ## Validation and failure modes
 | Failure | Detection | Behavior |
 |---|---|---|

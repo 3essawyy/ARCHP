@@ -7,7 +7,10 @@ Rules keep them deterministic and free of self-modifying code:
 * R7 is a fixed data base pointer (0x800); it is read but never written.
 * LDD/STD use ``off(R7)`` with offsets 0..0xFF (data area 0x800..0x8FF).
 * The stack depth stays within 0..16, so PUSH never reaches the code.
-* Optional features (later tasks): forward branches, CALL/RET, INT.
+* Optional features: forward branches, CALL/RET, INT, hardware-interrupt
+  handler, and counted backward loops (``loops``: R6 counts up from -k to 0,
+  ``INC R6`` + ``JN`` closes the loop, so the predictor sees repeated branches;
+  R6 is then excluded from the random destinations).
 """
 
 from __future__ import annotations
@@ -26,9 +29,10 @@ def generate(
     calls: bool = False,
     sw_int: bool = False,
     hw_int: bool = False,
+    loops: bool = False,
 ) -> str:
     rng = random.Random(seed)  # noqa: S311 (test-program generator)
-    regs = [f"R{i}" for i in range(7)]  # destinations R0..R6
+    regs = [f"R{i}" for i in range(6 if loops else 7)]  # destinations
     srcs = [f"R{i}" for i in range(8)]
 
     def r() -> str:
@@ -49,10 +53,17 @@ def generate(
     label = 0
     pending: list[tuple[int, str]] = []  # (emit before instruction index, label)
     body: list[str] = []
+    loop_end = -1
     for i in range(length):
         for at, lab in [p for p in pending if p[0] == i]:
             body.append(f"{lab}:")
             pending.remove((at, lab))
+        if i == loop_end:
+            body += ["INC R6", f"JN LP{i}"]
+            loop_end = -1
+        if loops and loop_end < 0 and not pending and rng.random() < 0.12:
+            loop_end = i + rng.randrange(3, 8)
+            body += [f"LDM R6, {rng.randrange(2, 7):X}", "NOT R6", "INC R6", f"LP{loop_end}:"]
         k = rng.random()
         if k < 0.30:
             body.append(f"{rng.choice(ALU3)} {r()}, {s()}, {s()}")
@@ -86,20 +97,22 @@ def generate(
             body.append(f"LDM {r()}, {rng.getrandbits(16):X}")
         elif k < 0.92:
             body.append("SETC")
-        elif branches and k < 0.97:
+        elif branches and loop_end < 0 and k < 0.97:
             label += 1
             lab = f"L{label}"
             op = rng.choice(("JZ", "JN", "JC", "JZ", "JN", "JC", "JMP"))
             body.append(f"{op} {lab}")
             pending.append((min(length, i + 1 + rng.randrange(0, 4)), lab))
-        elif calls and k < 0.985:
+        elif calls and loop_end < 0 and k < 0.985:
             body.append(f"CALL {rng.choice(('F1', 'F2'))}")
-        elif sw_int and k < 0.995:
+        elif sw_int and loop_end < 0 and k < 0.995:
             body.append(f"INT {rng.randrange(2)}")
         else:
             body.append("NOP")
     for _, lab in pending:
         body.append(f"{lab}:")
+    if loop_end >= 0:
+        body += ["INC R6", f"JN LP{loop_end}"]
     lines += body
     lines += [f"OUT R{i}" for i in range(8)]
     lines.append("HLT")
@@ -109,7 +122,7 @@ def generate(
     if hw_int:  # handler: changes flags and registers, restores them via RTI
         lines += [".ORG 700", "PUSH R0", "LDM R0, 0", "SUB R0, R0, R0", "INC R5", "POP R0", "RTI"]
     if sw_int:
-        lines += [".ORG 740", "NOT R6", "RTI", ".ORG 760", "IADD R6, R6, 3", "RTI"]
+        lines += [".ORG 740", "NOT R5", "RTI", ".ORG 760", "IADD R5, R5, 3", "RTI"]
     inputs = " ".join(f"{rng.getrandbits(32):X}" for _ in range(40))
     lines.insert(1, f"#! in: {inputs}")
     lines.insert(2, "#! max_cycles: 20000")

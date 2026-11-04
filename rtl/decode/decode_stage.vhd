@@ -23,6 +23,7 @@ entity decode_stage is
     fetch_valid : in  std_logic;     -- instr is a fetched instruction
     id_pc       : in  addr_t;        -- address of instr
     id_npc      : in  addr_t;        -- address of instr + 1
+    id_pred     : in  std_logic;     -- fetch predicted this instruction as a taken jump
     flush       : in  std_logic;     -- EX2 redirect: kill the instruction in ID
     mem_busy    : in  std_logic;     -- MEM stage owns the memory this cycle
     pcl_valid   : in  std_logic;     -- WB loads PC this cycle (ends `wait`)
@@ -54,7 +55,9 @@ architecture rtl of decode_stage is
   signal inject            : std_logic;     -- start a hardware interrupt now
   signal cu_hw, cu_phase   : std_logic;
   signal is_int            : std_logic;
+  signal is_cond           : std_logic;
   signal redirect_i        : std_logic;
+  signal fix_i             : std_logic;
   signal halt_now          : std_logic;
   signal halted_r          : std_logic;
   signal halt_pc_r         : addr_t;
@@ -93,6 +96,7 @@ begin
   is_jump  <= '1' when opcode = OP_JMP or opcode = OP_CALL else '0';
   is_ret   <= '1' when opcode = OP_RET or opcode = OP_RTI else '0';
   is_int   <= '1' when opcode = OP_INT else '0';
+  is_cond  <= '1' when opcode = OP_JZ or opcode = OP_JN or opcode = OP_JC else '0';
 
   -- hardware interrupt (ADR-007): replaces the valid instruction in ID, never
   -- inside a micro-op sequence; its return address is that instruction's PC
@@ -105,8 +109,9 @@ begin
   lu_stall <= (use_a and (load_hazard(ex1_ctrl, f_ra) or load_hazard(ex2_ctrl, f_ra))) or
               (use_b and (load_hazard(ex1_ctrl, f_rb) or load_hazard(ex2_ctrl, f_rb)));
 
-  process (cu_ctrl, valid_in, lu_stall, is_swap, is_int, is_hlt, is_jump, is_ret, phase,
-           hw_phase, inject, mem_busy, f_rd, f_ra, f_rb, ra_data, rb_data, instr, id_pc, id_npc)
+  process (cu_ctrl, valid_in, lu_stall, is_swap, is_int, is_hlt, is_jump, is_ret, is_cond, phase,
+           hw_phase, inject, mem_busy, f_rd, f_ra, f_rb, ra_data, rb_data, instr, id_pc, id_npc,
+           id_pred)
     variable o   : id_ex1_t;
     variable rep : std_logic;
     variable pn  : std_logic;
@@ -114,6 +119,7 @@ begin
     variable sw  : std_logic;       -- start waiting for a PC load
     variable rd  : std_logic;       -- JMP/CALL redirect
     variable hl  : std_logic;       -- HLT
+    variable fix : std_logic;       -- predicted taken but not a conditional jump
   begin
     o          := C_ID_EX1_NOP;
     o.ra       := f_ra;
@@ -128,6 +134,7 @@ begin
     sw         := '0';
     rd         := '0';
     hl         := '0';
+    fix        := '0';
 
     if valid_in = '1' then
       if hw_phase = '1' then                          -- interrupt uop2: PC <- M[1]
@@ -175,6 +182,10 @@ begin
           rd := '1';
         elsif is_hlt = '1' then
           hl := '1';
+        elsif is_cond = '1' then
+          o.ctrl.pred := id_pred;                     -- EX2 checks the prediction
+        elsif id_pred = '1' then
+          fix := '1';                                 -- stale BTB hit: back to npc
         end if;
       end if;
     end if;
@@ -183,12 +194,13 @@ begin
     phase_n    <= pn;
     hw_n       <= hn;
     start_wait <= sw;
-    redirect_i <= rd;
+    redirect_i <= rd or fix;
+    fix_i      <= fix;
     halt_now   <= hl;
   end process;
 
   redirect    <= redirect_i;
-  target      <= instr(C_ADDR_W - 1 downto 0);
+  target      <= id_npc when fix_i = '1' else instr(C_ADDR_W - 1 downto 0);
   block_fetch <= halted_r or wait_r or halt_now or start_wait;
 
   process (clk)

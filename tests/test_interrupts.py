@@ -13,8 +13,10 @@ from archp.golden import check_expect
 PROG = assemble_file(REPO_ROOT / "programs/interrupt.asm")
 
 
-def run_and_compare(prog: object, build: Path, intr: list[int]) -> sim.RtlResult:
-    r = sim.run_rtl(prog, build, intr_cycles=intr)  # type: ignore[arg-type]
+def run_and_compare(
+    prog: object, build: Path, intr: list[int], dynamic: bool = False
+) -> sim.RtlResult:
+    r = sim.run_rtl(prog, build, intr_cycles=intr, dynamic=dynamic)  # type: ignore[arg-type]
     g = sim.golden_for(prog, r)  # type: ignore[arg-type]
     diffs = sim.compare(g, r)
     assert diffs == [], f"INTR at {intr}:\n" + "\n".join(diffs)
@@ -29,9 +31,10 @@ def test_no_interrupt_baseline(rtl_build: Path) -> None:
 
 # one pulse at every cycle of the program: lands on branches, flushes, stalls,
 # CALL/RET waits, memory conflicts, the ISR itself is never re-entered
+@pytest.mark.parametrize("dynamic", [False, True], ids=["static", "dynamic"])
 @pytest.mark.parametrize("cycle", range(1, 125, 1))
-def test_single_pulse_sweep(cycle: int, rtl_build: Path) -> None:
-    r = run_and_compare(PROG, rtl_build, [cycle])
+def test_single_pulse_sweep(cycle: int, dynamic: bool, rtl_build: Path) -> None:
+    r = run_and_compare(PROG, rtl_build, [cycle], dynamic)
     if cycle < r.cycles - 12:  # well before HLT: must be taken exactly once
         assert len(r.ints) == 1, f"pulse at {cycle}: {r.ints}"
         assert r.regs[6] == 1
@@ -71,9 +74,12 @@ def test_interrupt_after_hlt_is_ignored(rtl_build: Path) -> None:
     assert r.status == "HALTED"
 
 
+@pytest.mark.parametrize("dynamic", [False, True], ids=["static", "dynamic"])
 @pytest.mark.parametrize("seed", range(30))
-def test_fuzz_with_interrupts(seed: int, rtl_build: Path) -> None:
-    src = fuzz.generate(2000 + seed, length=70, branches=True, calls=True, sw_int=True, hw_int=True)
+def test_fuzz_with_interrupts(seed: int, dynamic: bool, rtl_build: Path) -> None:
+    src = fuzz.generate(
+        2000 + seed, length=70, branches=True, calls=True, sw_int=True, hw_int=True, loops=True
+    )
     prog = assemble(src)
     cycles = sorted({(seed * 37 + k * 53) % 220 + 5 for k in range(3)})
-    run_and_compare(prog, rtl_build, cycles)
+    run_and_compare(prog, rtl_build, cycles, dynamic)

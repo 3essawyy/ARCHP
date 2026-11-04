@@ -13,3 +13,4 @@ One plan per non-trivial task, numbered like its task (`PLAN-006` ↔ `T-006`). 
 | [PLAN-007](PLAN-007-control-flow.md) | T-007 Control flow | Executed |
 | [PLAN-008](PLAN-008-interrupts-reset-hlt.md) | T-008 Interrupts, INT/RTI, reset, HLT | Executed |
 | [PLAN-009](PLAN-009-modelsim-demo.md) | T-009 ModelSim do-files | Executed |
+| [PLAN-010](PLAN-010-dynamic-bp.md) | T-010 Bonus dynamic predictor | Executed |
