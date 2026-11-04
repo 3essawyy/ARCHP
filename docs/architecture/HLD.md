@@ -1,6 +1,6 @@
 # ARCHP — High-Level Design
 
-- **Status:** Design (T-001). Each section is marked when the RTL implements it; module LLDs in [../modules/](../modules/README.md) hold the "as built" detail.
+- **Status:** Implemented. The static build has been complete since T-008, and every penalty in §6 is measured by `tests/test_timing.py`. Module LLDs in [../modules/](../modules/README.md) hold the "as built" detail.
 - **Brief:** [Architecture_Project_Fa26.pdf](../RefrenceDocs/Architecture_Project_Fa26.pdf) · requirements [REQ-*](../RefrenceDocs/REQ-requirements.md) · decisions [ADR-*](../decisions/README.md)
 
 ## 1. Overview
@@ -228,17 +228,18 @@ Exact field lists live in `rtl/pkg/archp_pkg.vhd` and [modules/pipeline](../modu
 ### 6.3 Control hazards
 | Case | Handling | Penalty |
 |---|---|---|
-| JMP, CALL | Redirect in ID in the same cycle the instruction arrives | 0 |
+| JMP, CALL | Redirect in ID in the same cycle the instruction arrives | 0 (measured) |
 | JZ/JN/JC not taken (predicted not-taken) | Fall through | 0 |
-| JZ/JN/JC taken | Resolved in EX2: flush ID and EX1, redirect | 2 |
-| RET, RTI | `wait` after decode; PC ← popped word in WB | 4 |
-| INT n, interrupt | Push uop + vector uop, `wait`; PC ← vector in WB | 5 |
+| JZ/JN/JC taken | Resolved in EX2: flush ID and EX1, redirect | 2 (measured) |
+| RET, RTI | `wait` after decode; PC ← popped word in WB | 4 (measured) |
+| INT n, interrupt | Push uop + vector uop, `wait`; PC ← vector in WB | 5 (measured: INT+RTI = 9) |
 | Bonus predictor correct | BTB/2-bit counter predicts in fetch | 0 |
 
 ### 6.4 Interrupt corner cases ([ADR-007](../decisions/ADR-007-interrupts.md))
 - **Edge capture:** INTR.IN is edge-detected and latched in `int_pending`, which clears only when the interrupt push micro-op reaches EX2 (EX2 is never flushed).
 - **Injection:** only on a valid instruction in decode, which becomes the return address. Never during a multi-micro-op sequence, a `wait`, or after HLT.
 - **Wrong path:** if the decode instruction is on a wrong path (an older branch in EX2 mispredicts), the injected micro-ops are flushed with it, `int_pending` stays set, and the interrupt is re-injected on the correct path. This is the brief's "corner cases like branching".
+- **Back-to-back requests:** two INTR edges less than 3 cycles apart are merged (measured; ADR-007).
 
 ## 7. Reset, boot and halt
 - **RESET.IN** is synchronous and active high. It clears every pipeline register (valid = 0), the register file, CCR and OUT, and sets SP = 0xFFF. Boot then reads M[0] and loads it into PC.

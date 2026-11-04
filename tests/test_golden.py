@@ -151,6 +151,8 @@ def test_check_expect_reports_mismatches() -> None:
 def test_program_expectations_on_golden(path: Path) -> None:
     p = assemble_file(path)
     assert p.directives.expect, f"{path.name} has no #! expect line"
+    if p.directives.intr_cycles:
+        pytest.skip("interrupt timing comes from the RTL (tests/test_interrupts.py)")
     s = Golden(p.image(), p.directives.inputs).run()
     assert check_expect(s, p.directives.expect) == []
 
