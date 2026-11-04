@@ -6,6 +6,10 @@
 --   * load-use hazard detection unit (HDU): stall = bubble + replay
 --   * micro-op sequencer: SWAP (2 uops, ADR-008)
 --   * HLT: stop fetching, let older instructions drain (ADR-010)
+--   * JMP/CALL: redirect fetch in this cycle (0 bubbles, ADR-011)
+--   * RET/RTI: stop fetching until WB loads PC from the stack (`wait`)
+--   * a flush (older branch mispredicted in EX2) cancels everything decode
+--     started: micro-op phase, wait, and even a speculative HLT
 -- =============================================================================
 library ieee;
 use ieee.std_logic_1164.all;
@@ -20,6 +24,7 @@ entity decode_stage is
     id_npc      : in  addr_t;        -- address of instr + 1
     flush       : in  std_logic;     -- EX2 redirect: kill the instruction in ID
     mem_busy    : in  std_logic;     -- MEM stage owns the memory this cycle
+    pcl_valid   : in  std_logic;     -- WB loads PC this cycle (ends `wait`)
     -- hazard detection inputs (instructions in EX1 and EX2)
     ex1_ctrl    : in  ctrl_t;
     ex2_ctrl    : in  ctrl_t;
@@ -31,6 +36,8 @@ entity decode_stage is
     -- outputs
     id_ex1_d    : out id_ex1_t;      -- next ID/EX1 register value
     replay      : out std_logic;     -- re-fetch id_pc (instruction not consumed)
+    redirect    : out std_logic;     -- JMP/CALL: fetch from `target` now
+    target      : out addr_t;
     block_fetch : out std_logic;     -- do not fetch this cycle
     halted      : out std_logic;
     halt_pc     : out addr_t
@@ -48,6 +55,9 @@ architecture rtl of decode_stage is
   signal valid_in          : std_logic;
   signal lu_stall          : std_logic;
   signal is_swap, is_hlt   : std_logic;
+  signal is_jump, is_ret   : std_logic;
+  signal wait_r            : std_logic;     -- waiting for a PC load (RET/RTI)
+  signal start_wait        : std_logic;
 
   function load_hazard(c : ctrl_t; r : reg_addr_t) return std_logic is
   begin
@@ -69,9 +79,11 @@ begin
   ra_addr <= f_ra;
   rb_addr <= f_rb;
 
-  valid_in <= fetch_valid and not halted_r and not flush;
+  valid_in <= fetch_valid and not halted_r and not wait_r and not flush;
   is_swap  <= '1' when opcode = OP_SWAP else '0';
   is_hlt   <= '1' when opcode = OP_HLT else '0';
+  is_jump  <= '1' when opcode = OP_JMP or opcode = OP_CALL else '0';
+  is_ret   <= '1' when opcode = OP_RET or opcode = OP_RTI else '0';
 
   -- load-use: a source in use is the destination of a load (LDD/POP) in EX1 or
   -- EX2; its data only exists in WB (synchronous RAM) -> stall until then.
@@ -121,24 +133,37 @@ begin
     phase_n  <= pn;
   end process;
 
-  block_fetch <= halted_r or (valid_in and is_hlt);
+  -- JMP/CALL never stall (no register sources), so a valid one always issues
+  redirect   <= valid_in and is_jump;
+  target     <= instr(C_ADDR_W - 1 downto 0);
+  start_wait <= valid_in and is_ret and not lu_stall;
+
+  block_fetch <= halted_r or wait_r or (valid_in and (is_hlt or is_ret));
 
   process (clk)
   begin
     if rising_edge(clk) then
       if rst = '1' then
         phase     <= '0';
+        wait_r    <= '0';
         halted_r  <= '0';
         halt_pc_r <= (others => '0');
       else
-        if valid_in = '1' and is_hlt = '1' then
-          halted_r  <= '1';
-          halt_pc_r <= id_pc;
-        end if;
-        if flush = '1' then
-          phase <= '0';
+        if flush = '1' then                -- wrong path: undo everything decode started
+          phase    <= '0';
+          wait_r   <= '0';
+          halted_r <= '0';
         else
           phase <= phase_n;
+          if valid_in = '1' and is_hlt = '1' then
+            halted_r  <= '1';
+            halt_pc_r <= id_pc;
+          end if;
+          if start_wait = '1' then
+            wait_r <= '1';
+          elsif pcl_valid = '1' then
+            wait_r <= '0';
+          end if;
         end if;
       end if;
     end if;

@@ -12,8 +12,8 @@ Decode stage: control unit (opcode → control word), micro-op sequencer (SWAP, 
 ## Interfaces
 | Direction | Interface | Contract |
 |---|---|---|
-| Provides | `id_ex1_d`, `replay`, `block_fetch`, `halted`, `halt_pc`, `ra_addr`, `rb_addr` | |
-| Consumes | `instr` (RAM output), `fetch_valid`, `id_pc`, `id_npc`, `flush`, `mem_busy`, `ex1_ctrl`, `ex2_ctrl`, `ra_data`, `rb_data` | |
+| Provides | `id_ex1_d`, `replay`, `redirect`, `target`, `block_fetch`, `halted`, `halt_pc`, `ra_addr`, `rb_addr` | |
+| Consumes | `instr` (RAM output), `fetch_valid`, `id_pc`, `id_npc`, `flush`, `mem_busy`, `pcl_valid`, `ex1_ctrl`, `ex2_ctrl`, `ra_data`, `rb_data` | |
 
 ## Data
 (filled when implemented)
@@ -24,6 +24,10 @@ Decode stage: control unit (opcode → control word), micro-op sequencer (SWAP, 
 - **HDU:** `lu_stall` when a used source equals `rd` of a valid `wb_mem` op in EX1 or EX2. The result is a bubble plus `replay`.
 - **SWAP:** in phase 0, issue uop1 (`rd ← R[Ra]`) only if `mem_busy = 0`, then replay. Phase 1 issues uop2 (`Ra ← R[Rb]`, `swap2`, `retire`).
 - **HLT:** issues a retiring NOP micro-op and sets `halted` and `halt_pc`. `block_fetch = halted or (valid HLT)`.
+
+- **JMP/CALL:** `redirect = valid_in and (JMP or CALL)`, `target = instr(11:0)`. CALL also issues its push micro-op.
+- **RET/RTI:** `start_wait` sets `wait_r` (fetch blocked, decode input ignored); `pcl_valid` clears it.
+- **Flush:** clears `phase`, `wait_r` and `halted_r` (undoes a wrong-path SWAP/RET/HLT).
 
 ## Validation and failure modes
 | Failure | Detection | Behavior |

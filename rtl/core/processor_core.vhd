@@ -50,6 +50,8 @@ architecture rtl of processor_core is
   signal ra_addr, rb_addr               : reg_addr_t;
   signal ra_data, rb_data               : word_t;
   signal replay, block_fetch, halted    : std_logic;
+  signal id_redirect                    : std_logic;
+  signal id_target                      : addr_t;
   signal halt_pc                        : addr_t;
   -- pipeline registers (d = next value, q = current)
   signal ide_d, ide_q                   : id_ex1_t;
@@ -77,7 +79,7 @@ begin
     port map (clk => clk, rst => rst,
               pcl_valid => pcl_valid, pcl_addr => mem_dout(C_ADDR_W - 1 downto 0),
               ex2_redirect => ex2_redirect, ex2_target => ex2_target,
-              id_redirect => '0', id_target => (others => '0'),
+              id_redirect => id_redirect, id_target => id_target,
               id_replay => replay, mem_busy => mem_busy, block_fetch => block_fetch,
               fetch_addr => fetch_addr, fetch_valid => fetch_valid,
               id_pc => id_pc, id_npc => id_npc, pc_out => pc);
@@ -97,9 +99,11 @@ begin
   u_decode : entity work.decode_stage
     port map (clk => clk, rst => rst, instr => mem_dout, fetch_valid => fetch_valid,
               id_pc => id_pc, id_npc => id_npc, flush => flush, mem_busy => mem_busy,
+              pcl_valid => pcl_valid,
               ex1_ctrl => ide_q.ctrl, ex2_ctrl => e12_q.ctrl,
               ra_addr => ra_addr, rb_addr => rb_addr, ra_data => ra_data, rb_data => rb_data,
-              id_ex1_d => ide_d, replay => replay, block_fetch => block_fetch,
+              id_ex1_d => ide_d, replay => replay, redirect => id_redirect, target => id_target,
+              block_fetch => block_fetch,
               halted => halted, halt_pc => halt_pc);
 
   u_rf : entity work.register_file
@@ -127,13 +131,11 @@ begin
 
   -- ===================================================================== EX2
   u_ex2 : entity work.ex2_stage
-    port map (clk => clk, rst => rst, d => e12_q, flags => flags, q => e2m_d, sp_out => sp);
+    port map (clk => clk, rst => rst, d => e12_q, flags => flags, q => e2m_d,
+              redirect => ex2_redirect, target => ex2_target, clr => ex2_clr, sp_out => sp);
 
-  -- control flow (T-007)
-  flush        <= '0';
-  ex2_redirect <= '0';
-  ex2_target   <= (others => '0');
-  ex2_clr      <= BR_NONE;
+  -- a mispredicted branch in EX2 kills the (younger) instructions in ID and EX1
+  flush <= ex2_redirect;
 
   u_ex2_mem : entity work.ex2_mem_reg port map (clk => clk, rst => rst, d => e2m_d, q => e2m_q);
 

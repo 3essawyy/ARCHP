@@ -1,7 +1,7 @@
 # Module: fetch
 
 - **Owner:** TBD
-- **Status:** Implemented (T-006; redirects completed in T-007)
+- **Status:** Implemented (T-006, T-007)
 - **Code:** `rtl/fetch/fetch_unit.vhd`
 - **Tasks:** T-006, T-007, T-010
 - **ADRs:** ADR-004, ADR-009, ADR-011
