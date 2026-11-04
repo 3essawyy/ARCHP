@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, types, tests (Python + GHDL)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GHDL
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ghdl
+          ghdl --version | head -1
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install Python + dependencies (locked)
+        run: uv sync --locked
+      - name: Lint (ruff)
+        run: uv run poe lint
+      - name: Types (mypy --strict)
+        run: uv run poe types
+      - name: Tests (pytest, incl. GHDL testbenches and RTL-vs-golden programs)
+        run: uv run poe test
