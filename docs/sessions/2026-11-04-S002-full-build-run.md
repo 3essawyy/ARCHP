@@ -1,6 +1,6 @@
 # Session S002 — 2026-11-04 — Full-build run (T-002 onward)
 
-- **Tasks touched:** T-002…T-006 (more appended as completed)
+- **Tasks touched:** T-002…T-007 (more appended as completed)
 - **Branches / PRs:** one `<type>/T-NNN-slug` branch and one squash-merged PR per task
 
 ## Mode
@@ -16,6 +16,7 @@ After the S001 interview the user said "Execute": Claude builds T-002…T-013 in
   - Full 6-stage core for non-control instructions (fetch/replay, decode/HDU/SWAP/HLT, forwarding, EX2 stack unit, MEM arbitration, WB), `tb_processor`, `archp sim/check`, fuzzer.
   - Results: RTL == golden on all programs plus 40 random programs; 6 hazard mutations each caught; measured penalties match HLD §6. 180 tests (+3 strict-xfail for T-007/T-008). PR #6.
   - Tooling feedback fixed: `--elab-run` instead of `-e`, GHDL make for dependency order.
+- **T-007:** branch unit, flush, JMP/CALL redirect, RET/RTI wait; wrong-path HLT/RET/SWAP undone on flush. RTL == golden on all branch programs plus 40 random branchy programs; 5 of 6 mutations caught (the 6th is equivalent); penalties 2/0/4 measured. 227 tests. PR #7.
 
 ## Decisions (with ADR links)
 - SUB/CMP carry: the user ruled "brief silent → follow last term's implementation" = borrow. Evidence and a one-constant switch were added to [ADR-006](../decisions/ADR-006-flag-semantics.md).
@@ -24,7 +25,7 @@ After the S001 interview the user said "Execute": Claude builds T-002…T-013 in
 - None.
 
 ## Next steps (in order)
-1. T-007 control flow.
+1. T-008 interrupts, INT/RTI.
 
 ## Notes for next session
 - GHDL 4.1 mcode from Ubuntu apt; `uv sync` downloads Python 3.12.

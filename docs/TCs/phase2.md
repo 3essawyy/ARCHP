@@ -43,7 +43,7 @@ Status tracked in [README.md](README.md). Unless noted, each TC is automated by 
 
 ### TC-206 — Control hazards
 - **Proves:** REQ-E5 (control hazards), REQ-I12, REQ-I13
-- **Programs:** `programs/branch.asm`, `programs/call_ret.asm`
+- **Programs:** `programs/branch.asm`, `programs/call_ret.asm`, `programs/control_corners.asm` + `test_fuzz_control_flow` (40 random programs)
 - **Expected:**
   - JZ/JN/JC taken and not taken, with the tested flag cleared only when taken;
   - flag produced right before the jump;

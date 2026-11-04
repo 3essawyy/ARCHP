@@ -13,8 +13,6 @@ from archp.golden import check_expect
 PROGRAMS = sorted((REPO_ROOT / "programs").glob("*.asm"))
 # Features delivered by later tasks: strict xfail until then (must start passing).
 PENDING = {
-    "branch": "control flow (T-007)",
-    "call_ret": "control flow (T-007)",
     "int_sw": "INT/RTI (T-008)",
 }
 
@@ -44,3 +42,8 @@ def test_program_static(path: Path, rtl_build: Path) -> None:
 @pytest.mark.parametrize("seed", range(40))
 def test_fuzz_straight_line(seed: int, rtl_build: Path) -> None:
     _check(fuzz.generate(seed, length=70), rtl_build)
+
+
+@pytest.mark.parametrize("seed", range(40))
+def test_fuzz_control_flow(seed: int, rtl_build: Path) -> None:
+    _check(fuzz.generate(1000 + seed, length=70, branches=True, calls=True), rtl_build)

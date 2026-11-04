@@ -36,9 +36,9 @@ Update **Status** with date + commit whenever a TC is run. Automated TCs run in 
 | TC-201 | One-operand instructions: RTL == golden | Automated | **Pass** 2026-11-04 (T-006) |
 | TC-202 | Two-operand instructions: RTL == golden | Automated | **Pass** 2026-11-04 (T-006) |
 | TC-203 | Memory and stack instructions: RTL == golden | Automated | **Pass** 2026-11-04 (T-006) |
-| TC-204 | Data hazards: forwarding distances 1–4, load-use 1–3, flags | Automated | **Pass** 2026-11-04 (T-006) (flags→jump part in T-007) |
+| TC-204 | Data hazards: forwarding distances 1–4, load-use 1–3, flags | Automated | **Pass** 2026-11-04 (T-006, flags→jump T-007) |
 | TC-205 | Structural hazards: memory port conflicts, SWAP | Automated | **Pass** 2026-11-04 (T-006) |
-| TC-206 | Control hazards: JZ/JN/JC taken/not, flag clear, JMP/CALL/RET | Automated | Not run |
+| TC-206 | Control hazards: JZ/JN/JC taken/not, flag clear, JMP/CALL/RET | Automated | **Pass** 2026-11-04 (T-007) |
 | TC-207 | INT/RTI and hardware interrupt incl. branch/stall corner cases | Automated | Not run |
 | TC-208 | Reset vector and HLT | Automated | Partial **Pass** 2026-11-04 (T-006, reset + HLT; INTR-after-HLT in T-008) |
 | TC-209 | TA-style test programs (Branch/Memory/One/Two operand style) | Automated | Not run |

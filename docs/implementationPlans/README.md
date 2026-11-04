@@ -10,3 +10,4 @@ One plan per non-trivial task, numbered like its task (`PLAN-006` ↔ `T-006`). 
 | [PLAN-004](PLAN-004-golden-model.md) | T-004 Golden model | Executed |
 | [PLAN-005](PLAN-005-rtl-blocks.md) | T-005 RTL building blocks | Executed |
 | [PLAN-006](PLAN-006-pipeline-core.md) | T-006 Pipeline core + harness | Executed |
+| [PLAN-007](PLAN-007-control-flow.md) | T-007 Control flow | Executed |
