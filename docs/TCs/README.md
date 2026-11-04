@@ -31,7 +31,7 @@ Update **Status** with date + commit whenever a TC is run. Automated TCs run in 
 | TC-102 | Clean setup from SG-001; `poe check` green | Manual + CI | Partial: **Pass** in CI (ubuntu-24.04) 2026-11-04 (T-002); fresh-laptop run by team pending |
 | TC-103 | Every instruction encodes per the ISA table | Automated | **Pass** 2026-11-04 (T-003) |
 | TC-104 | Assembler accepts the TA program format and reports errors | Automated | **Pass** 2026-11-04 (T-003) |
-| TC-105 | Golden model implements every ISA rule (ADR-005…010) | Automated | Not run |
+| TC-105 | Golden model implements every ISA rule (ADR-005…010) | Automated | **Pass** 2026-11-04 (T-004) |
 | TC-106 | Unit testbenches: ALU, register file, memory | Automated | Not run |
 | TC-201 | One-operand instructions: RTL == golden | Automated | Not run |
 | TC-202 | Two-operand instructions: RTL == golden | Automated | Not run |
