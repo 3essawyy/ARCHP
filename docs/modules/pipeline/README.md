@@ -1,7 +1,7 @@
 # Module: pipeline
 
 - **Owner:** TBD
-- **Status:** In progress (records defined in T-005)
+- **Status:** Implemented (T-006)
 - **Code:** `rtl/pkg/archp_pkg.vhd`, `rtl/pipeline/*.vhd`
 - **Tasks:** T-006
 - **ADRs:** ADR-004
@@ -20,6 +20,8 @@ The four pipeline registers ID/EX1, EX1/EX2, EX2/MEM, MEM/WB: record types, rese
 ## Internal design
 See HLD §5 for the field list. The full `ctrl_t` rides in every stage register; fields a stage never reads have no fan-out and are removed by synthesis.
 
+Stalls never reach past ID, so the registers have no enable. Bubbles and flushes are produced by the stage that computes `d` (decode emits `C_ID_EX1_NOP`; EX1 emits `C_EX1_EX2_NOP` when flushed).
+
 ## Validation and failure modes
 | Failure | Detection | Behavior |
 |---|---|---|
@@ -29,6 +31,7 @@ See HLD §5 for the field list. The full `ctrl_t` rides in every stage register;
 |---|---|---|
 
 ## Tests
+All program tests.
 Covered by the core tests from T-006.
 
 ## Known limitations

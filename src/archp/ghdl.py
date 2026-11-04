@@ -34,18 +34,40 @@ def ghdl_exe() -> str:
     return exe
 
 
-def _call(args: Sequence[str], cwd: Path) -> RunResult:
-    proc = subprocess.run([ghdl_exe(), *args], cwd=cwd, capture_output=True, text=True, check=False)
+def _call(args: Sequence[str], cwd: Path, timeout: float = 600) -> RunResult:
+    try:
+        proc = subprocess.run(
+            [ghdl_exe(), *args],
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as e:
+        raise GhdlError(f"ghdl {' '.join(args[:3])} timed out after {timeout}s") from e
     return RunResult(proc.returncode, proc.stdout + proc.stderr)
 
 
-def analyse(files: Sequence[Path], workdir: Path) -> None:
-    """Analyse files in order into the `work` library inside `workdir`."""
+def analyse(files: Sequence[Path], workdir: Path, top: str | None = None) -> None:
+    """Import `files` into the `work` library inside `workdir` and build them.
+
+    With `top`, GHDL's make (`-m`) analyses everything `top` needs in dependency
+    order; without it, files are analysed in the given order.
+    """
     workdir.mkdir(parents=True, exist_ok=True)
-    for f in files:
-        res = _call(["-a", STD, f"--workdir={workdir}", str(f)], cwd=workdir)
-        if res.returncode != 0:
-            raise GhdlError(f"analysis failed for {f}:\n{res.output}")
+    if top is None:
+        for f in files:
+            res = _call(["-a", STD, f"--workdir={workdir}", str(f)], cwd=workdir)
+            if res.returncode != 0:
+                raise GhdlError(f"analysis failed for {f}:\n{res.output}")
+        return
+    res = _call(["-i", STD, f"--workdir={workdir}", *map(str, files)], cwd=workdir)
+    if res.returncode != 0:
+        raise GhdlError(f"import failed:\n{res.output}")
+    res = _call(["-m", STD, f"--workdir={workdir}", top], cwd=workdir)
+    if res.returncode != 0:
+        raise GhdlError(f"build of {top} failed:\n{res.output}")
 
 
 def run(
@@ -53,27 +75,25 @@ def run(
     workdir: Path,
     generics: Mapping[str, str | int | bool] | None = None,
     extra: Sequence[str] = (),
+    timeout: float = 600,
 ) -> RunResult:
-    """Elaborate and run `top`; returns the combined output (never raises on assert)."""
+    """Elaborate and run `top` in one step (never raises on a failed assertion).
+
+    A single ``--elab-run`` matters: elaboration evaluates generics-dependent
+    constants (e.g. file loaders), so it must see the real generic values.
+    """
     gargs = []
     for k, v in (generics or {}).items():
         if isinstance(v, bool):
             v = "true" if v else "false"
         gargs.append(f"-g{k}={v}")
-    elab = _call(["-e", STD, f"--workdir={workdir}", top], cwd=workdir)
-    if elab.returncode != 0:
-        raise GhdlError(f"elaboration of {top} failed:\n{elab.output}")
     return _call(
-        ["-r", STD, f"--workdir={workdir}", top, *gargs, "--assert-level=error", *extra],
+        ["--elab-run", STD, f"--workdir={workdir}", top, *gargs, "--assert-level=error", *extra],
         cwd=workdir,
+        timeout=timeout,
     )
 
 
 def rtl_files() -> list[Path]:
-    """Synthesizable sources in dependency order (package first, top last)."""
-    order = ["pkg", "memory", "decode", "execute", "pipeline", "fetch", "core", "top"]
-    rtl = REPO_ROOT / "rtl"
-    files: list[Path] = []
-    for d in order:
-        files.extend(sorted((rtl / d).glob("*.vhd")))
-    return files
+    """All synthesizable sources (order does not matter with `analyse(..., top=...)`)."""
+    return sorted((REPO_ROOT / "rtl").rglob("*.vhd"))
