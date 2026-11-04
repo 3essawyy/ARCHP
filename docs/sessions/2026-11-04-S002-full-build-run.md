@@ -1,6 +1,6 @@
 # Session S002 — 2026-11-04 — Full-build run (T-002 onward)
 
-- **Tasks touched:** T-002…T-009 (more appended as completed)
+- **Tasks touched:** T-002…T-010 (more appended as completed)
 - **Branches / PRs:** one `<type>/T-NNN-slug` branch and one squash-merged PR per task
 
 ## Mode
@@ -23,6 +23,9 @@ After the S001 interview the user said "Execute": Claude builds T-002…T-013 in
   - Measured: INT+RTI = 9 cycles; edges < 3 cycles apart merge (documented in ADR-007).
   - 390 tests. PR #8.
 - **T-009:** ModelSim `compile.do`/`run.do`/`wave.do`, `.in`/`.intr` stimulus files, SG-004. Do-file consistency tested (order mutation caught). PR #9.
+- **T-010 (bonus):**
+  - 8-entry BTB + 2-bit counters in fetch behind `G_DYNAMIC_BP`; every test runs in both builds (724+); loop 170 → 112 cycles (exactly as predicted).
+  - Coverage gaps fixed: loop fuzzing, `smc_btb.asm`. 5/5 predictor mutations caught. PR #10.
 
 ## Decisions (with ADR links)
 - ADR-007 consequence added: back-to-back INTR edges closer than the acknowledge latency merge (measured, T-008).

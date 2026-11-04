@@ -41,7 +41,8 @@ end entity processor_core;
 architecture rtl of processor_core is
   -- fetch
   signal fetch_addr, id_pc, id_npc, pc : addr_t;
-  signal fetch_valid                    : std_logic;
+  signal fetch_valid, id_pred           : std_logic;
+  signal bp_valid, bp_taken             : std_logic;
   -- memory
   signal mem_busy, mem_we               : std_logic;
   signal mem_addr                       : addr_t;
@@ -78,13 +79,16 @@ architecture rtl of processor_core is
 begin
   -- ===================================================================== IF
   u_fetch : entity work.fetch_unit
+    generic map (G_DYNAMIC_BP => G_DYNAMIC_BP)
     port map (clk => clk, rst => rst,
               pcl_valid => pcl_valid, pcl_addr => mem_dout(C_ADDR_W - 1 downto 0),
               ex2_redirect => ex2_redirect, ex2_target => ex2_target,
               id_redirect => id_redirect, id_target => id_target,
               id_replay => replay, mem_busy => mem_busy, block_fetch => block_fetch,
               fetch_addr => fetch_addr, fetch_valid => fetch_valid,
-              id_pc => id_pc, id_npc => id_npc, pc_out => pc);
+              id_pc => id_pc, id_npc => id_npc, id_pred => id_pred, pc_out => pc,
+              bp_valid => bp_valid, bp_npc => e12_q.ret_pc, bp_taken => bp_taken,
+              bp_target => e12_q.target);
 
   -- ===================================================================== memory
   -- structural hazard: the MEM stage owns the single port when it needs it
@@ -100,7 +104,8 @@ begin
   -- ===================================================================== ID
   u_decode : entity work.decode_stage
     port map (clk => clk, rst => rst, instr => mem_dout, fetch_valid => fetch_valid,
-              id_pc => id_pc, id_npc => id_npc, flush => flush, mem_busy => mem_busy,
+              id_pc => id_pc, id_npc => id_npc, id_pred => id_pred, flush => flush,
+              mem_busy => mem_busy,
               pcl_valid => pcl_valid, int_pending => int_pending,
               ex1_ctrl => ide_q.ctrl, ex2_ctrl => e12_q.ctrl,
               ra_addr => ra_addr, rb_addr => rb_addr, ra_data => ra_data, rb_data => rb_data,
@@ -134,7 +139,8 @@ begin
   -- ===================================================================== EX2
   u_ex2 : entity work.ex2_stage
     port map (clk => clk, rst => rst, d => e12_q, flags => flags, q => e2m_d,
-              redirect => ex2_redirect, target => ex2_target, clr => ex2_clr, sp_out => sp);
+              redirect => ex2_redirect, target => ex2_target, clr => ex2_clr,
+              bp_valid => bp_valid, bp_taken => bp_taken, sp_out => sp);
 
   -- a mispredicted branch in EX2 kills the (younger) instructions in ID and EX1
   flush <= ex2_redirect;

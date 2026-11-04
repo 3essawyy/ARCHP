@@ -21,6 +21,8 @@ entity ex2_stage is
     redirect  : out std_logic;       -- mispredict: flush younger stages, refetch
     target    : out addr_t;          -- correct next PC
     clr       : out br_t;            -- flag to clear (taken JZ/JN/JC)
+    bp_valid  : out std_logic;       -- predictor update: a conditional jump resolved
+    bp_taken  : out std_logic;
     sp_out    : out addr_t
   );
 end entity ex2_stage;
@@ -42,6 +44,8 @@ begin
   redirect <= d.ctrl.valid and (taken xor d.ctrl.pred);
   target   <= d.target when taken = '1' else d.ret_pc;
   clr      <= d.ctrl.br when taken = '1' else BR_NONE;
+  bp_valid <= d.ctrl.valid when d.ctrl.br /= BR_NONE else '0';
+  bp_taken <= taken;
 
   active <= d.ctrl.valid when d.ctrl.stack /= STK_NONE else '0';
   sp_pm  <= std_logic_vector(unsigned(sp) + 1) when d.ctrl.stack = STK_POP else

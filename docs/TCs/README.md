@@ -42,7 +42,7 @@ Update **Status** with date + commit whenever a TC is run. Automated TCs run in 
 | TC-207 | INT/RTI and hardware interrupt incl. branch/stall corner cases | Automated | **Pass** 2026-11-04 (T-008): 124-cycle sweep, 30 random programs |
 | TC-208 | Reset vector and HLT | Automated | **Pass** 2026-11-04 (T-006, T-008) |
 | TC-209 | TA-style test programs (Branch/Memory/One/Two operand style) | Automated | Not run |
-| TC-210 | Dynamic-predictor build passes every program | Automated | Not run |
+| TC-210 | Dynamic-predictor build passes every program | Automated | **Pass** 2026-11-04 (T-010): all tests x both builds; loop 170 → 112 cycles |
 | TC-211 | `ghdl --synth` of the top: synthesizable, no latches | Automated | Not run |
 | TC-212 | Quartus 16.1 full compile: programming file, block memory bits = 131072, Flow Summary | Manual (team) | Not run |
 | TC-213 | ModelSim waveform with the required signals only | Manual (team) | Automated part **Pass** 2026-11-04 (T-009); GUI run: team |
