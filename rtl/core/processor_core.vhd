@@ -48,7 +48,6 @@ architecture rtl of processor_core is
   signal mem_addr                       : addr_t;
   signal mem_din, mem_dout              : word_t;
   -- decode
-  signal ra_addr, rb_addr               : reg_addr_t;
   signal ra_data, rb_data               : word_t;
   signal replay, block_fetch, halted    : std_logic;
   signal id_redirect                    : std_logic;
@@ -108,13 +107,12 @@ begin
               mem_busy => mem_busy,
               pcl_valid => pcl_valid, int_pending => int_pending,
               ex1_ctrl => ide_q.ctrl, ex2_ctrl => e12_q.ctrl,
-              ra_addr => ra_addr, rb_addr => rb_addr, ra_data => ra_data, rb_data => rb_data,
               id_ex1_d => ide_d, replay => replay, redirect => id_redirect, target => id_target,
               block_fetch => block_fetch,
               halted => halted, halt_pc => halt_pc);
 
   u_rf : entity work.register_file
-    port map (clk => clk, rst => rst, ra_addr => ra_addr, rb_addr => rb_addr,
+    port map (clk => clk, rst => rst, ra_addr => ide_q.ra, rb_addr => ide_q.rb,
               ra_data => ra_data, rb_data => rb_data,
               we => wb_we, wa => mwb_q.ctrl.rd, wd => wb_data, regs_out => regs);
 
@@ -122,7 +120,7 @@ begin
 
   -- ===================================================================== EX1
   u_ex1 : entity work.ex1_stage
-    port map (d => ide_q, flush => flush,
+    port map (d => ide_q, flush => flush, ra_data => ra_data, rb_data => rb_data,
               ex2_ctrl => e12_q.ctrl, ex2_result => e12_q.result,
               mem_ctrl => e2m_q.ctrl, mem_data => e2m_q.data,
               wb_ctrl => mwb_q.ctrl, wb_data => wb_data, in_port => in_port,

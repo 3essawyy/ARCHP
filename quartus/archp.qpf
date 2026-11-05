@@ -1,0 +1,7 @@
+QUARTUS_VERSION = "16.1"
+DATE = "21:00:00  November 04, 2026"
+
+# Revisions
+
+PROJECT_REVISION = "archp"
+PROJECT_REVISION = "archp_dynamic"

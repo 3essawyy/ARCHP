@@ -2,7 +2,8 @@
 -- decode_stage : Decode (ID) — HLD 4.2
 --   * instruction word = RAM output (the RAM's registered address makes it the
 --     IF/ID instruction register, ADR-004); valid when fetch_valid = 1
---   * control unit, register-file read addresses, immediate, return PC
+--   * control unit, source register numbers, immediate, return PC
+--     (the register file itself is read in EX1, ADR-015)
 --   * load-use hazard detection unit (HDU): stall = bubble + replay
 --   * micro-op sequencer: SWAP, INT and the hardware interrupt (2 uops each,
 --     ADR-007/008); interrupt injection replaces the valid instruction in ID
@@ -31,11 +32,6 @@ entity decode_stage is
     -- hazard detection inputs (instructions in EX1 and EX2)
     ex1_ctrl    : in  ctrl_t;
     ex2_ctrl    : in  ctrl_t;
-    -- register file read
-    ra_addr     : out reg_addr_t;
-    rb_addr     : out reg_addr_t;
-    ra_data     : in  word_t;
-    rb_data     : in  word_t;
     -- outputs
     id_ex1_d    : out id_ex1_t;      -- next ID/EX1 register value
     replay      : out std_logic;     -- re-fetch id_pc (instruction not consumed)
@@ -87,9 +83,6 @@ begin
     port map (opcode => opcode, phase => cu_phase, hw => cu_hw,
               ctrl => cu_ctrl, use_a => use_a, use_b => use_b);
 
-  ra_addr <= f_ra;
-  rb_addr <= f_rb;
-
   valid_in <= fetch_valid and not halted_r and not wait_r and not flush;
   is_swap  <= '1' when opcode = OP_SWAP else '0';
   is_hlt   <= '1' when opcode = OP_HLT else '0';
@@ -110,7 +103,7 @@ begin
               (use_b and (load_hazard(ex1_ctrl, f_rb) or load_hazard(ex2_ctrl, f_rb)));
 
   process (cu_ctrl, valid_in, lu_stall, is_swap, is_int, is_hlt, is_jump, is_ret, is_cond, phase,
-           hw_phase, inject, mem_busy, f_rd, f_ra, f_rb, ra_data, rb_data, instr, id_pc, id_npc,
+           hw_phase, inject, mem_busy, f_rd, f_ra, f_rb, instr, id_pc, id_npc,
            id_pred)
     variable o   : id_ex1_t;
     variable rep : std_logic;
@@ -124,8 +117,6 @@ begin
     o          := C_ID_EX1_NOP;
     o.ra       := f_ra;
     o.rb       := f_rb;
-    o.a        := ra_data;
-    o.b        := rb_data;
     o.imm      := instr(15 downto 0);
     o.ret_pc   := id_npc;
     rep        := '0';

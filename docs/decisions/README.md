@@ -18,6 +18,7 @@ Never delete or rewrite an accepted ADR. To change a decision, add a new ADR and
 | [ADR-012](ADR-012-dynamic-branch-prediction.md) | Bonus: 2-bit predictor + BTB in fetch behind `G_DYNAMIC_BP` | Accepted | 2026-11-04 |
 | [ADR-013](ADR-013-verification-strategy.md) | Golden model vs RTL on every program, both builds | Accepted | 2026-11-04 |
 | [ADR-014](ADR-014-stage-mapping.md) | Effective address in EX1 adder; EX2 forms final address | Accepted | 2026-11-04 |
+| [ADR-015](ADR-015-register-read-in-ex1.md) | Register file read in EX1; no ID/EX1 operands, no RF bypass | Accepted | 2026-11-04 |
 
 ## Open decisions (to become ADRs)
 | Topic | Decide in |

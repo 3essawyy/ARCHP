@@ -29,8 +29,18 @@ architecture rtl of alu is
   signal cin   : std_logic;
   signal sum   : unsigned(33 downto 0);         -- '0'&a&'1' + '0'&bx&cin
   signal cout  : std_logic;
-  signal shl_v : unsigned(32 downto 0);         -- bit 32 = last bit shifted out
-  signal shr_v : unsigned(31 downto 0);
+  signal sh_in : std_logic_vector(31 downto 0);  -- A, bit-reversed for SHR
+  signal shl_v : unsigned(32 downto 0);         -- bit 32 = last bit shifted out (SHL)
+  signal shr_v : std_logic_vector(31 downto 0); -- SHR = reverse(SHL(reverse(A)))
+
+  function reverse(v : std_logic_vector(31 downto 0)) return std_logic_vector is
+    variable r : std_logic_vector(31 downto 0);
+  begin
+    for i in 0 to 31 loop
+      r(i) := v(31 - i);
+    end loop;
+    return r;
+  end function;
   signal res   : word_t;
 begin
   -- adder operand select: ADD (B, 0), SUB (~B, 1), INC (0, 1)
@@ -43,8 +53,11 @@ begin
   sum  <= unsigned('0' & a & '1') + unsigned('0' & bx & cin);
   cout <= sum(33);
 
-  shl_v <= shift_left(unsigned('0' & a), to_integer(unsigned(shamt)));
-  shr_v <= shift_right(unsigned(a), to_integer(unsigned(shamt)));
+  -- one barrel shifter for both directions (area, T-011): a logical right
+  -- shift is a left shift of the bit-reversed operand, reversed back
+  sh_in <= reverse(a) when op = ALU_SHR else a;
+  shl_v <= shift_left(unsigned('0' & sh_in), to_integer(unsigned(shamt)));
+  shr_v <= reverse(std_logic_vector(shl_v(31 downto 0)));
 
   with op select res <=
     std_logic_vector(sum(32 downto 1)) when ALU_ADD | ALU_SUB | ALU_INC,
@@ -52,7 +65,7 @@ begin
     not a                              when ALU_NOT,
     b                                  when ALU_PASSB,
     std_logic_vector(shl_v(31 downto 0)) when ALU_SHL,
-    std_logic_vector(shr_v)            when ALU_SHR,
+    shr_v                              when ALU_SHR,
     in_port                            when ALU_IN,
     a                                  when others;   -- PASSA, SETC
 

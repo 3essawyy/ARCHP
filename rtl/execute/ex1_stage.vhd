@@ -1,6 +1,7 @@
 -- =============================================================================
 -- ex1_stage : Execute-1 — HLD 4.3
---   forwarding muxes A/B, immediate extension, ALU, IN.PORT sample,
+--   register-file read (addresses from ID/EX1) + forwarding muxes A/B,
+--   immediate extension, ALU, IN.PORT sample,
 --   flag-write requests to the CCR, next EX1/EX2 register value.
 --   Everything is suppressed when EX2 flushes this stage (wrong path).
 -- =============================================================================
@@ -12,6 +13,8 @@ entity ex1_stage is
   port (
     d          : in  id_ex1_t;       -- ID/EX1 register
     flush      : in  std_logic;      -- EX2 redirect kills this instruction
+    ra_data    : in  word_t;         -- register file, read with d.ra / d.rb (ADR-015)
+    rb_data    : in  word_t;
     -- forwarding sources
     ex2_ctrl   : in  ctrl_t;
     ex2_result : in  word_t;
@@ -46,13 +49,13 @@ begin
     ex2_result when "01",
     mem_data   when "10",
     wb_data    when "11",
-    d.a        when others;
+    ra_data    when others;
 
   with sel_b select fb <=
     ex2_result when "01",
     mem_data   when "10",
     wb_data    when "11",
-    d.b        when others;
+    rb_data    when others;
 
   imm_ext(15 downto 0)  <= d.imm;
   imm_ext(31 downto 16) <= (others => d.imm(15) and d.ctrl.imm_sext);
