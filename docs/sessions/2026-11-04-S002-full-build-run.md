@@ -81,6 +81,9 @@ After the S001 interview the user said "Execute": Claude builds T-002…T-013 in
    - narrowing `ret_pc`/`target` carried through EX1/EX2.
 
 ## Notes for next session
+- **Open question for the user (before T-012):** the Phase 1 report will describe the final, already-optimised design (ADR-015, shared shifter). Should Phase 1 instead show a "before" version, so the Phase 2 "changes after Phase 1" report has content? Ask first.
+- **Ask the TA early:** which SUB/CMP carry convention their test programs expect (ADR-006 risk). It is the biggest remaining risk to the 12 instruction marks; switching is one constant in the RTL and one in the golden model.
+- **Fresh container:** if `ghdl` or `yosys` is missing, run `sudo apt-get install -y ghdl yosys` before `uv run poe check`.
 - **Git flow:** one branch + PR per task, squash-merge after CI is green (GitHub MCP tools). PRs #1–#10 are merged. T-011 is on `feat/T-011-quartus-area`, ahead of `main`, no PR yet.
 - **Tests:** `uv run poe check` runs ~735 tests (~65 s, parallel). They cover:
   - program RTL==golden in both builds;
