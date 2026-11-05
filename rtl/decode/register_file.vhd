@@ -1,7 +1,7 @@
 -- =============================================================================
 -- register_file : R0..R7 (8 x 32 flip-flops), 2 combinational read ports,
--- 1 synchronous write port (WB), write-back bypass on both read ports so a
--- value written this cycle is read this cycle (structural/data hazard, HLD 6.1).
+-- 1 synchronous write port (WB). Read in EX1 (ADR-015): a value being written
+-- this cycle reaches EX1 through WB forwarding, so no internal bypass is needed.
 -- =============================================================================
 library ieee;
 use ieee.std_logic_1164.all;
@@ -36,7 +36,7 @@ begin
     end if;
   end process;
 
-  ra_data <= wd when we = '1' and wa = ra_addr else regs(to_integer(unsigned(ra_addr)));
-  rb_data <= wd when we = '1' and wa = rb_addr else regs(to_integer(unsigned(rb_addr)));
+  ra_data <= regs(to_integer(unsigned(ra_addr)));
+  rb_data <= regs(to_integer(unsigned(rb_addr)));
   regs_out <= regs;
 end architecture rtl;

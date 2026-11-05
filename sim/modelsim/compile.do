@@ -27,5 +27,6 @@ vcom -93 -work work $RTL/pipeline/mem_wb_reg.vhd
 vcom -93 -work work $RTL/fetch/btb.vhd
 vcom -93 -work work $RTL/fetch/fetch_unit.vhd
 vcom -93 -work work $RTL/core/processor_core.vhd
+vcom -93 -work work $RTL/top/processor_top.vhd
 vcom -93 -work work $TB/tb_util_pkg.vhd
 vcom -93 -work work $TB/tb_processor.vhd

@@ -1,6 +1,6 @@
 # T-011: Quartus project, synthesis checks and area tuning
 
-- **Status:** Todo
+- **Status:** In progress (code + tests done on branch `feat/T-011-quartus-area`; docs/PR pending)
 - **Phase:** P2
 - **Target:** W+5
 - **Modules:** sim, all RTL

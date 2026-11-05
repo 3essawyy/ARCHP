@@ -47,19 +47,18 @@ begin
       assert rdb = std_logic_vector(to_unsigned((7 - i) * 16#01010101# + 1, 32))
         report "port B" severity error;
     end loop;
-    -- bypass: value being written this cycle is visible on both read ports
+    -- no internal bypass (ADR-015): during the write cycle the old value is
+    -- read; the new one is visible after the clock edge
     wait until falling_edge(clk);
     ra <= "011"; rb <= "011"; we <= '1'; wa <= "011"; wd <= x"DEADBEEF";
     wait for 1 ns;
-    assert rda = x"DEADBEEF" and rdb = x"DEADBEEF" report "bypass" severity error;
-    -- no bypass for a different register
-    ra <= "010";
-    wait for 1 ns;
-    assert rda = std_logic_vector(to_unsigned(2 * 16#01010101# + 1, 32))
-      report "false bypass" severity error;
+    assert rda = std_logic_vector(to_unsigned(3 * 16#01010101# + 1, 32))
+      report "unexpected bypass" severity error;
     wait until falling_edge(clk);
     we <= '0';
-    assert regs(3) = x"DEADBEEF" report "write after bypass" severity error;
+    wait for 1 ns;
+    assert rda = x"DEADBEEF" and rdb = x"DEADBEEF" and regs(3) = x"DEADBEEF"
+      report "write" severity error;
     report "TB_DONE";
     done <= true;
     wait;

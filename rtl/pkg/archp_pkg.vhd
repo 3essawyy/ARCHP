@@ -123,10 +123,8 @@ package archp_pkg is
   -- ---------------------------------------------------------------- pipeline registers
   type id_ex1_t is record
     ctrl   : ctrl_t;
-    ra     : reg_addr_t;    -- source register numbers (for forwarding)
+    ra     : reg_addr_t;    -- source registers: read in EX1 + forwarding (ADR-015)
     rb     : reg_addr_t;
-    a      : word_t;        -- register-file values read in ID
-    b      : word_t;
     imm    : imm_t;
     ret_pc : addr_t;        -- return / fall-through PC
   end record;
@@ -150,8 +148,8 @@ package archp_pkg is
     data : word_t;          -- ALU result (memory read data comes from the RAM)
   end record;
 
-  constant C_ID_EX1_NOP  : id_ex1_t  := (C_CTRL_NOP, "000", "000", C_ZERO_WORD, C_ZERO_WORD,
-                                         (others => '0'), (others => '0'));
+  constant C_ID_EX1_NOP  : id_ex1_t  := (C_CTRL_NOP, "000", "000", (others => '0'),
+                                         (others => '0'));
   constant C_EX1_EX2_NOP : ex1_ex2_t := (C_CTRL_NOP, C_ZERO_WORD, C_ZERO_WORD,
                                          (others => '0'), (others => '0'));
   constant C_EX2_MEM_NOP : ex2_mem_t := (C_CTRL_NOP, (others => '0'), C_ZERO_WORD);
